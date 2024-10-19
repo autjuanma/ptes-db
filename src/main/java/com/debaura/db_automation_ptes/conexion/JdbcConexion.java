@@ -5,36 +5,40 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import com.debaura.db_automation_ptes.page.LoginPage;
 
 public class JdbcConexion {
 
-	public static void main(String[] args) {
+    private static final String HOST = "localhost";
+    private static final String PORT = "3306";
+    private static final String DATABASE = "demo";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "********"; 
 
-		String host = "localhost";
-		String port = "3306";
+    private static final String SQL_QUERY = "SELECT * FROM credentials WHERE scenario = 'zerobalancecard'";
+    private static final String LOGIN_URL = "https://login.app.com";
 
-		try {
+    private static final String USERNAME_CONSTANT = "username";
+    private static final String PASSWORD_CONSTANT = "passwd";
 
-			Connection con = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/demo", "root",
-					"********");
-			Statement s = con.createStatement();
-			ResultSet rs = s.executeQuery("select * from credentials where scenario = 'zerobalancecard'");
+    public static void main(String[] args) {
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE, DB_USERNAME, DB_PASSWORD);
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery(SQL_QUERY);
 
-			while (rs.next()) {
-
-				WebDriver driver = new FirefoxDriver();
-				driver.get("https://login.salesforce.com");
-				driver.findElement(By.xpath(".//*[@id='username']")).sendKeys(rs.getString("username"));
-				driver.findElement(By.xpath("//input[@id='password']")).sendKeys(rs.getString("passwd"));
-				driver.findElement(By.xpath("//input[@id='Login']")).click();
-
-			}
-		} catch (Exception e) {
-		}
-
-	}
-
+            while (rs.next()) {
+                WebDriver driver = new FirefoxDriver();
+                driver.get(LOGIN_URL);
+                LoginPage loginPage = new LoginPage(driver);
+                String username = rs.getString(USERNAME_CONSTANT);
+                String password = rs.getString(PASSWORD_CONSTANT);
+                loginPage.login(username, password);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Log the exception for debugging
+        }
+    }
 }
